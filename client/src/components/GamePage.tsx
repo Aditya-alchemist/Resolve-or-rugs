@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy, Target, Flame } from "lucide-react";
 import MarketCard from "./MarketCard";
 import FeedbackModal from "./FeedbackModal";
+import { ThemeToggle } from "./ThemeToggle";
 import type { Market } from "@/data/markets";
 import deekLeft from "@assets/Deek_Pose_2_1759237070528.png";
 import deekRight from "@assets/Deek_Pose_1_1759237070527.png";
@@ -80,7 +81,8 @@ export default function GamePage({ markets, onComplete }: GamePageProps) {
             <h1 className="font-display text-2xl" data-testid="text-game-title">
               Resolve or Rug?
             </h1>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
               <img 
                 src={deekImage}
                 alt="Deek mascot"

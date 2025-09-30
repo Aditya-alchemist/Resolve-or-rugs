@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ThemeToggle } from "./ThemeToggle";
 import deekPose from "@assets/Deek_Pose_1_1759237070527.png";
 import { Play, Target, Zap, Trophy } from "lucide-react";
 
@@ -10,6 +11,9 @@ interface HomePageProps {
 export default function HomePage({ onStartGame }: HomePageProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-primary/10 via-background to-background">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-lg space-y-8 text-center">
         <div className="space-y-4">
           <div className="flex justify-center">

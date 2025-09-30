@@ -70,8 +70,8 @@ export default function MarketCard({ market, onSwipe, style }: MarketCardProps) 
           </div>
 
           {/* Question */}
-          <div className="flex-1 flex items-center justify-center">
-            <h2 className="text-2xl md:text-3xl font-display text-center leading-tight">
+          <div className="flex-1 flex items-center justify-center px-2">
+            <h2 className="text-2xl md:text-3xl font-display text-center leading-tight break-words">
               {market.question}
             </h2>
           </div>

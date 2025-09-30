@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "./components/ThemeProvider";
 import RegistrationPage from "./components/RegistrationPage";
 import HomePage from "./components/HomePage";
 import GamePage from "./components/GamePage";
@@ -11,10 +12,11 @@ import LeaderboardPage from "./components/LeaderboardPage";
 import { getRandomMarkets } from "./data/markets";
 import type { GameResults } from "./components/GamePage";
 import type { LeaderboardEntry } from "./components/LeaderboardPage";
+import type { GameResult } from "@shared/schema";
 
 type GameState = 'registration' | 'home' | 'playing' | 'results' | 'leaderboard';
 
-function App() {
+function AppContent() {
   const [gameState, setGameState] = useState<GameState>('registration');
   const [playerName, setPlayerName] = useState("");
   const [playerEmail, setPlayerEmail] = useState("");
@@ -32,8 +34,23 @@ function App() {
     setGameState('playing');
   };
 
-  const handleGameComplete = (results: GameResults) => {
+  const handleGameComplete = async (results: GameResults) => {
     setGameResults(results);
+    
+    // Save game result to backend
+    try {
+      await apiRequest("POST", "/api/game-results", {
+        playerName,
+        playerEmail,
+        score: results.score,
+        accuracy: results.accuracy,
+      });
+      // Invalidate leaderboard cache
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
+    } catch (error) {
+      console.error("Failed to save game result:", error);
+    }
+    
     setGameState('results');
   };
 
@@ -49,62 +66,70 @@ function App() {
     setGameState('home');
   };
 
-  // Mock leaderboard data
-  const mockTopPlayers: LeaderboardEntry[] = [
-    { rank: 1, name: "Sarah Chen", score: 1950, accuracy: 95 },
-    { rank: 2, name: "Mike Rodriguez", score: 1820, accuracy: 89 },
-    { rank: 3, name: "Emma Watson", score: 1750, accuracy: 87 },
-    { rank: 4, name: "James Kim", score: 1680, accuracy: 84 },
-    { rank: 5, name: "Lisa Anderson", score: 1620, accuracy: 82 },
-    { rank: 6, name: "Tom Bradley", score: 1550, accuracy: 79 },
-    { rank: 7, name: "Nina Patel", score: 1490, accuracy: 77 },
-    { rank: 8, name: "Chris Martinez", score: 1430, accuracy: 75 },
-    { rank: 9, name: "Amy Thompson", score: 1370, accuracy: 72 },
-    { rank: 10, name: "David Lee", score: 1310, accuracy: 70 },
-  ];
+  // Fetch real leaderboard data
+  const { data: leaderboardData } = useQuery<GameResult[]>({
+    queryKey: ["/api/leaderboard"],
+    enabled: gameState === 'leaderboard',
+  });
 
-  const currentUserInLeaderboard: LeaderboardEntry = gameResults ? {
-    rank: 4,
+  // Transform backend data to leaderboard entries
+  const topPlayers: LeaderboardEntry[] = (leaderboardData || []).map((result, index) => ({
+    rank: index + 1,
+    name: result.playerName,
+    score: result.score,
+    accuracy: result.accuracy,
+    isCurrentUser: result.playerName === playerName,
+  }));
+
+  // Find current user in leaderboard
+  const currentUserInLeaderboard: LeaderboardEntry = topPlayers.find(p => p.isCurrentUser) || {
+    rank: topPlayers.length + 1,
     name: playerName,
-    score: gameResults.score,
-    accuracy: gameResults.accuracy,
-    isCurrentUser: true
-  } : mockTopPlayers[3];
-
-  const topPlayersWithUser = mockTopPlayers.map((player, index) => 
-    index === 3 && gameResults ? { ...currentUserInLeaderboard, isCurrentUser: true } : player
-  );
+    score: gameResults?.score || 0,
+    accuracy: gameResults?.accuracy || 0,
+    isCurrentUser: true,
+  };
 
   return (
+    <>
+      {gameState === 'registration' && (
+        <RegistrationPage onComplete={handleRegistrationComplete} />
+      )}
+      {gameState === 'home' && (
+        <HomePage onStartGame={handleStartGame} />
+      )}
+      {gameState === 'playing' && (
+        <GamePage markets={currentMarkets} onComplete={handleGameComplete} />
+      )}
+      {gameState === 'results' && gameResults && (
+        <ResultsPage
+          results={gameResults}
+          playerName={playerName}
+          onPlayAgain={handlePlayAgain}
+          onViewLeaderboard={handleViewLeaderboard}
+        />
+      )}
+      {gameState === 'leaderboard' && (
+        <LeaderboardPage
+          topPlayers={topPlayers}
+          currentUser={currentUserInLeaderboard}
+          onPlayAgain={handlePlayAgain}
+          onGoHome={handleGoHome}
+        />
+      )}
+    </>
+  );
+}
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        {gameState === 'registration' && (
-          <RegistrationPage onComplete={handleRegistrationComplete} />
-        )}
-        {gameState === 'home' && (
-          <HomePage onStartGame={handleStartGame} />
-        )}
-        {gameState === 'playing' && (
-          <GamePage markets={currentMarkets} onComplete={handleGameComplete} />
-        )}
-        {gameState === 'results' && gameResults && (
-          <ResultsPage
-            results={gameResults}
-            playerName={playerName}
-            onPlayAgain={handlePlayAgain}
-            onViewLeaderboard={handleViewLeaderboard}
-          />
-        )}
-        {gameState === 'leaderboard' && (
-          <LeaderboardPage
-            topPlayers={topPlayersWithUser}
-            currentUser={currentUserInLeaderboard}
-            onPlayAgain={handlePlayAgain}
-            onGoHome={handleGoHome}
-          />
-        )}
-        <Toaster />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <AppContent />
+          <Toaster />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

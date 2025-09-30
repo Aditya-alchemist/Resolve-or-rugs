@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ThemeToggle } from "./ThemeToggle";
 import { Trophy, Medal, Award, RotateCcw, Home } from "lucide-react";
 import deekChampion from "@assets/Deek_Pose_12_1759237131289.png";
 
@@ -62,7 +63,10 @@ export default function LeaderboardPage({ topPlayers, currentUser, onPlayAgain, 
                 <p className="text-sm text-muted-foreground">Top prediction market experts</p>
               </div>
             </div>
-            <Trophy className="w-8 h-8 text-primary" />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Trophy className="w-8 h-8 text-primary" />
+            </div>
           </div>
         </div>
       </div>
