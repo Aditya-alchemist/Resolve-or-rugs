@@ -1,6 +1,6 @@
 # 🐒 Resolve or Rug?
 
-**Resolve or Rug?** is a mobile-first **prediction market education game** featuring **Deek**, a playful monkey mascot. The game helps users learn how to identify **legitimate prediction markets** vs **rug pulls (scams)** through swipe-based gameplay (like Tinder).
+**Resolve or Rug?** is a  **prediction market education game** featuring **Deek**, a playful  mascot. The game helps users learn how to identify **legitimate prediction markets** vs **rug pulls (scams)** through swipe-based gameplay (like Tinder).
 
 Players swipe **right for resolve** or **left for rug**, get instant educational feedback, and compete on the **leaderboard** with scores, streaks, and achievements.
 
